@@ -1,7 +1,13 @@
+/* Simple program to compute the price of a plot of land given;
+ * the size/area of the plot 
+ * price per decimal
+*/
 #include <stdio.h>
-// formulas ; price_per_decimal * size_of_the_plot(area) = price_of_plot
-//  price_per_decimal = total_price / area 
-//  1 m^2 = 0.024 decimal
+/* Note that: 
+ *  price_per_decimal * size_of_the_plot(area) = price_of_plot
+ *  price_per_decimal = total_price / area 
+ *  1 sqaure metre = 0.024 decimals
+*/
 
 int main(void) {
   float length,width,area,price_per_decimal,size_of_the_plot_in_decimals,price_of_the_plot;

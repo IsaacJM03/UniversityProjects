@@ -1,3 +1,7 @@
+/*
+ *Program in C to compute the equation of line of a perpendicular bisector given:
+ * Two pairs of coordinates
+*/
 #include<stdio.h>
 
 int main(void)
