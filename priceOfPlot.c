@@ -10,8 +10,8 @@
 */
 
 int main(void) {
-  float length,width,area,price_per_decimal,size_of_the_plot_in_decimals,price_of_the_plot;
-  float one_square_metre_in_decimals = 0.024;
+  float length,width,area_in_sq_metres,price_per_decimal,size_of_the_plot_in_decimals,price_of_the_plot;
+  float one_square_metre_in_decimals = 0.0247;
 
   printf("Enter length: ");
   scanf("%f",&length);
@@ -22,14 +22,14 @@ int main(void) {
   printf("Enter price per decimal: ");
   scanf("%f",&price_per_decimal);
 
-  area = length * width;
-  size_of_the_plot_in_decimals = area * one_square_metre_in_decimals;
+  area_in_sq_metres = length * width;
+  size_of_the_plot_in_decimals = area_in_sq_metres * one_square_metre_in_decimals;
 
   printf("Area is %.2f decimals \n",size_of_the_plot_in_decimals);
 
   price_of_the_plot = price_per_decimal * size_of_the_plot_in_decimals;
 
-  printf("Price of the plot: UGX.%.2f \n",price_of_the_plot);
+  printf("The price of the plot is UGX.%.2f \n",price_of_the_plot);
 
   return 0;
 }
