@@ -2,34 +2,48 @@
 #include <math.h>
 
 int mean (int number);
-int standardDeviation(void);
 
 int main(void)
 {
   int num;
   int count=0;
   int sum;
-  float mean;
+  float mean_number;
+  double standard_dev;
 
   printf("Enter an integer between 1 and 100:");
   scanf("%d",&num);
+  
+  mean_number = mean(num);
 
-  if (num >100)
-    num =100;
-
-   while(count <= num)
+    for (count = 0; count <= num; count++)
     {
-      sum += count;
-      count++;
+      int difference = count - mean_number;
+      int square_difference = difference * difference;
+
+      sum += square_difference;
 
     }
-    mean = sum/num;
-    printf("The mean is %f \n",mean);
-    printf("The sum is: %d \n",sum);
+
+    float standard_dev = sqrt(sum/num);
+    printf("The standard deviation is %lf",standard_dev);
+    
     return 0;
 }
 
 int mean (int number)
 {
+  int count = 0, sum =0, mean_value=0;
+
+  while (count<=number)
+  {
+    
+    sum += count;
+    count++;
+  }
+
+  mean_value = (sum/number);
+  // printf("The sum is %d",sum);
+  return mean_value;
   
 }
