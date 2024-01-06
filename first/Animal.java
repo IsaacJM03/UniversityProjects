@@ -12,7 +12,7 @@ public class Animal {
     Animal cat = new Animal();
     cat.printAtrributes("Tom", "Brown", 4, 2);
     Animal person = new Animal();
-    person.printAtrributes("Malcolm", "Light-skinned",4, 2);
+    person.printAtrributes("Malcolm", "Light-skinned",2, 2);
   }
 
   public void printAtrributes(String name, String colour, int legs, int numberOfEars) {
