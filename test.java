@@ -19,14 +19,21 @@ public class test {
     // String result = x%2==0 ? "Even" : "Odd";
     // System.out.println(result);
 
-    String day = "F]s";
-    String result = switch (day) {
-      case "Monday" -> "Wake up";
-      case "Tuesday"-> "Breakfast";
-      case "Wednesday"-> "Lunch";
-      case "Thursday","Friday"-> "Dinner";
-      default -> "Invalid"; 
-    };
-    System.out.println(result);
+    // String day = "F]s";
+    // String result = switch (day) {
+    //   case "Monday" -> "Wake up";
+    //   case "Tuesday"-> "Breakfast";
+    //   case "Wednesday"-> "Lunch";
+    //   case "Thursday","Friday"-> "Dinner";
+    //   default -> "Invalid"; 
+    // };
+    // System.out.println(result);
+
+    int i = 50;
+
+    do {
+      System.out.println("Hi "+i);
+      i--;
+    } while (i>=4);
   }
 }
