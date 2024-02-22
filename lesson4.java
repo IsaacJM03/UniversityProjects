@@ -15,7 +15,7 @@ public class lesson4 {
   }
 }
 
-public class Innerlesson4 {
+class Innerlesson4 {
   public static void main(String[] args) {
     System.out.println("Hello World!");
     // Creating an instance of the lesson4 class
@@ -31,7 +31,7 @@ public class Innerlesson4 {
 
     // Private method (method1) is not accessible from this class
     // You will get a compilation error if you uncomment the line below
-    String result1 = myLesson.method1();
+    // String result1 = myLesson.method1();
   } 
   
 }
