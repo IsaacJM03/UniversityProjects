@@ -16,11 +16,12 @@ public static void main(String[] args)
     for (int j:i)
       System.out.println(j);
   }
+  
 
   for (int i = 0; i < A.length;i++)
     System.out.println(i);
   Student s = new Student();
-  College = "CoCis";
+  s.College = "CoCis";
   // System.out.println("College",College);
 }
 
