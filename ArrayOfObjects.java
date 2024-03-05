@@ -14,6 +14,9 @@ public class ArrayOfObjects {
     for (int i = 0; i < array.length; i++) {
       System.out.println(array[i].num);
     }
+    for (ArrayOfObjects i : array) {
+      System.out.println(i.num);
+    }
     s.close();
   }
   
