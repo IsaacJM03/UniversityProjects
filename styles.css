@@ -3,5 +3,13 @@
   color: rebeccapurple;
 }
 *{
-  color:aliceblue;
+  color:rgb(29, 102, 167);
+}
+body {
+  background-image: url("../Untitled4.jpeg");
+  background-repeat: no-repeat;
+  background-position: right top;
+}
+ul.a{
+  list-style-type: circle;
 }
