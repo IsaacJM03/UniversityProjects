@@ -17,7 +17,7 @@ public class Student {
 
 	public static void main(String[] args) {
 		Student s = new Student();
-		s.age = 8;
+		s.age = 8_000_000;
 		s.name = "Isaac";
 		
 		System.out.println("Name is: "+s.name +"\nAge is:"+s.age);

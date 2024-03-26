@@ -1,6 +1,7 @@
 public class Book {
   public String Title;
   public double Price;
+  final double cons = 35.7;
 
   Book() {
     //TODO Auto-generated constructor stub
@@ -25,5 +26,15 @@ public class Book {
       // System.out.print("Wagwan"); // doesnt move to next line
       // System.out.println("yep");
       
+  }
+}
+
+/**
+ * InnerBook
+ */
+class InnerBook extends Book {
+
+  public static void main(String[] args) {
+    System.out.println(cons);
   }
 }

@@ -26,16 +26,24 @@ abstract class Dog extends Animalia{
   }
 
   public abstract void walk();
+  public double m1(){
+    return 1;
+  };
   
 }
 
-class AnimaliaImplementation {
+class AnimaliaImplementation extends Dog{
+  public void walk()
+  {
+    System.out.println("Walking");
+  }
   public static void main(String[] args) {
     Cat c1 = new Cat();
     c1.talk();
     c1.walk();
 
-    Dog d1 = new Dog();
-    d1.talk();
+    Dog.talk();
+    AnimaliaImplementation a = new AnimaliaImplementation();
+    a.walk();
   }
 }

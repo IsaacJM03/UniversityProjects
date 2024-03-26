@@ -31,7 +31,10 @@ public class myClass implements MyInterface {
   // Implementing the interface but cannot access privateMethod()
 
   public static void main(String[] args) {
+      // MyInterface[] b = new MyInterface[3];
+      // b[1] = 2;
       // Can call static method directly
       MyInterface.staticMethod();
+      // MyInterface.privateMethod();
   }
 }
