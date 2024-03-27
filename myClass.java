@@ -30,11 +30,17 @@ interface MyInterface {
 public class myClass implements MyInterface {
   // Implementing the interface but cannot access privateMethod()
 
+  // In Java, static methods in interfaces are not inherited by implementing classes. Therefore, when you define a static method with the same name in the implementing class, it doesn't override the static method from the interface; rather, it is considered a separate static method in the class.
+
+  public static void staticMethod() {
+      System.out.println("Private method in class");
+  }
   public static void main(String[] args) {
       // MyInterface[] b = new MyInterface[3];
       // b[1] = 2;
       // Can call static method directly
-      MyInterface.staticMethod();
+      myClass test = new myClass();
+      test.staticMethod();
       // MyInterface.privateMethod();
   }
 }
