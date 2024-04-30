@@ -3,7 +3,7 @@ public class lesson4 {
   private String method1() {
     return "method 1";
   }
-  public String method2() {
+  public static String method2() {
     return "method 2";
   }
 

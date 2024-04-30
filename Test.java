@@ -23,7 +23,10 @@ interface A {
   void mA();
 }
 interface B {
-  void mB();  
+  void mB();
+  default void mC(){
+    System.out.println("Wagwan");
+  } 
 }
 interface D {} // tagging interface, use: Adds a data type to a class − This situation is where the term, tagging comes from. A class that implements a tagging interface does not need to define any methods (since the interface does not have any), but the class becomes an interface type through polymorphism.
 interface C extends A,B,D{
@@ -31,7 +34,14 @@ interface C extends A,B,D{
     System.out.println("Hello");
   };
 }
-public class Test implements C{
+class E {
+
+  void mE(){
+    System.out.println("Hello E");
+  }
+  int x = 5;
+}
+public class Test extends E implements C{
 
   public void mA(){
     System.out.println("Hello World");
@@ -42,7 +52,12 @@ public class Test implements C{
   }
 
   public static void main(String[] args) {
-    Test t = new Test();
-    t.mA();
+    B t = new Test();
+    t.mC(); // interesting
+    E e[] = new E[3]; // no errors because an abstract class can be used as a reference data type to create references
+    E e1 = new E();
+    boolean ans = t instanceof C; //true but why? Test inherits and extends all these
+    System.out.println(++e1.x);
+    System.out.println(ans);
   }
 }

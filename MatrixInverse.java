@@ -17,7 +17,7 @@ public class MatrixInverse {
     double determinant = (a00 * a11) - (a10 * a01);
     
     if (determinant == 0) {
-      System.out.println("Matrix is not invertible(determinant is zero)");
+      System.out.println("Matrix is wnot invertible(determinant is zero)");
     } else {
       double[][] inverse = new double[2][2];
       double[][] adjoint = {
