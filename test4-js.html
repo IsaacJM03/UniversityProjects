@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>JavaScript Object Constructors</h2>
+
+<p id="demo"></p>
+
+<script language="javascript">
+
+// Constructor function for Person objects
+function Person(first, last, age, eye) {
+  this.firstName = first;
+  this.lastName = last;
+  this.age = age;
+  this.eyeColor = eye;
+}
+
+// Create two Person objects
+const myFather = new Person("John", "Doe", 50, "blue");
+const myMother = new Person("Sally", "Rally", 48, "green");
+const person = {firstName:"John", lastName:"Doe", age:50, eyeColor:"blue"}; 
+// Display age
+document.getElementById("demo").innerHTML =
+"My father is " + myFather.age + ". My mother is " + myMother.age + "." + "and i know this guy " + person.firstName +" " + person.lastName +" " + person.age +" " + person.eyeColor; 
+// var x = myFunc(4,5);
+// console.log(x);
+
+// function myFunc(a,b) {
+//   prod = a * b;
+//  return prod;
+// }
+// let sum = 0
+// let i = 1;
+// do {
+//   sum += i;
+//   i += 1;
+//   console.log(sum);
+// }while (i <=100);
+// for (var i = 1; i <= 100; i++) {
+//   sum+=i;
+//   console.log(sum);
+// }
+
+class Car {
+  constructor(brand,model){
+    this.carname = brand;
+    this.model = model;
+  }
+  static hello () {
+    return this.carname;
+  }
+}
+mycar = new Car("Ford",700);
+Car.hello();
+document.write(mycar);
+array.splice()
+</script>
+
+</body>
+</html>
+
+
+
+<!-- <html>
+  <head>
+  <title>onLoad and onUnload Event Handler Example</title>
+  </head>
+  <body
+  onLoad="alert('Welcome to this page')"
+  onUnload="alert('Thanks for visiting this page')"
+  >
+  Load and UnLoad event test.
+  </body>
+</html>
+
+<html>
+<head>
+<title>onMouseOver / onMouseOut Event Handler Demo</title>
+<script type="text/javascript">
+  try{
+  document.write("Try block begins<br>");
+  // create a syntax error
+  eval ("10 + * 5");
+  } catch( errVar ) {
+  document.write("Exception caught<br>");
+  // errVar is an Error object
+  // All Error objects have a name and message properties
+  document.write("Error name: " + errVar.name + "<br>");
+  document.write("Error message: " + errVar.message +
+  "<br>");
+  } finally {
+  document.write("Finally block reached!");
+  }
+</script>
+</head>
+<body>
+<a href="http://www.cuhk.edu.hk"
+onMouseOver="window.status='CUHK Home'; return true;"
+onMouseOut="status=''"
+>CUHK</a>
+</body>
+</html>
+ -->

@@ -18,12 +18,21 @@ input[type="button"] {
 </head>
 <body>
 <h2>Styling Forms</h2>
-<form name="input" action="" method="get">
+<!-- <form name="input" action="" method="get">
   Firstname:<input type="text" name="Name" value="Peter" size="20">
   Lastname:<input type="text" name="Name" value="Griffin" size="20">
   <input type="button" value="Example Button">
+</form> -->
+<form method="post"
+action="https://pizza.example.com/order.cgi">
+<legend> Pizza Size </legend>
+<p><label> <input type=radio name=small required value="small"> Small </label></p>
+<p><label> <input type=radio name=medium required value="medium"> Medium </label></p>
+<p><label> <input type=radio name=large required value="large"> Large </label></p>
+<p><label> <input type=checkbox name="bacon" value="bacon"> Bacon </label></p> <p><label> <input type=checkbox name="cheese" value="cheese"> Extra Cheese.
+</label></p>
+<p><label> <input type=checkbox name="topping" value="onion"> Onion </label></p>
 </form>
-
 </body>
 </html>
 
