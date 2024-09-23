@@ -5,6 +5,7 @@ package Immutability;
 public class StrongImmutableExample {
   public static void main(String[] args) {
     StrongImmutable person = new StrongImmutable("John", 30);
+    // person.age = 30; //fails
     System.out.println(person.getName());
     System.out.println(person.getAge());
   }
