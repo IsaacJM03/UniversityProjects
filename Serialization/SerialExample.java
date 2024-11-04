@@ -1,16 +1,17 @@
 import java.io.*;
 
 class Employee implements Serializable {
-  transient int a;
+  transient double a;
   static int b;
   String name;
   int age;
 
-  public Employee(int a, int b, String name, int age) {
+  public Employee(double a, int b, String name, int age) {
     this.a = a;
     this.b = b;
     this.name = name;
     this.age = age;
+    System.out.println((int)(a*b));
   }
 }
 
@@ -41,6 +42,6 @@ public class SerialExample {
     Employee emp2 = (Employee) ois.readObject();
     ois.close();
     fis.close();
-    printdata(emp2);
+    printdata(emp2); //a reset to 0(default) since it is transient
   }
 }

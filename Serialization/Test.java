@@ -1,5 +1,4 @@
 import java.io.*;
-
 class Demo implements Serializable
 {
   String name;
