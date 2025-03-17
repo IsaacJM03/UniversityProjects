@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $user = "root";  // Change if necessary
-$pass = "isaac2003";      // Change if necessary
+$pass = "";      // Change if necessary
 $dbname = "user_management";
 
 $conn = new mysqli($host, $user, $pass, $dbname);
