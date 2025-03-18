@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
-$user = "root";  // Change if necessary
-$pass = "isaac2003";      // Change if necessary
+$user = "root";
+$pass = "isaac2003";
 $dbname = "user_management";
 
 $conn = new mysqli($host, $user, $pass, $dbname);
@@ -15,7 +15,7 @@ if ($conn->connect_error) {
     $stmt->close();
     $conn->select_db("user_management");
 
-    // create table users  -- done
+    // create table users if not there
     $createUserStmt = $conn->prepare("CREATE TABLE IF NOT EXISTS users (
         id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(50) NOT NULL,
@@ -27,7 +27,6 @@ if ($conn->connect_error) {
     )");
     $createUserStmt->execute();
     $createUserStmt->close();
-
 }
 ?>
 

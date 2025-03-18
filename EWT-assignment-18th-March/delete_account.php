@@ -15,10 +15,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $result->fetch_assoc();
     
     if ($user && $user["profile_picture"]) {
-        unlink($user["profile_picture"]); // Delete the profile picture file
+        unlink($user["profile_picture"]); 
     }
 
-    // Delete user from the database
     $conn->query("DELETE FROM users WHERE id = $id");
 
     // Destroy session and redirect

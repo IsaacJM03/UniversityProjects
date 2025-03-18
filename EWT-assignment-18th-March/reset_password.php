@@ -11,6 +11,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt->affected_rows > 0) {
         echo "Your password has been reset successfully.";
+        header("Location: login.php");
+        exit;
     } else {
         echo "Invalid or expired token.";
     }

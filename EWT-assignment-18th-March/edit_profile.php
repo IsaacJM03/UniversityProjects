@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "./db.php"; // Ensure correct path to your database file
+include "./db.php";
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
@@ -10,14 +10,14 @@ if (!isset($_SESSION["user_id"])) {
 $id = $_SESSION["user_id"];
 $message = "";
 
-// Fetch current user data
+//current user data
 $result = $conn->query("SELECT username, email,profile_picture FROM users WHERE id = $id");
 $user = $result->fetch_assoc();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
     $email = trim($_POST["email"]);
-    // Handle file upload
+
     if (!empty($_FILES["profile_picture"]["name"])) {
         $allowed_types = ["image/jpg", "image/jpeg", "image/png"];
         $file_type = $_FILES["profile_picture"]["type"];
@@ -33,7 +33,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $profile_picture = $user['profile_picture'];
     }
 
-    // Update user details in the database
     $stmt = $conn->prepare("UPDATE users SET username = ?, email = ?, profile_picture = ? WHERE id = ?");
     $stmt->bind_param("sssi", $username, $email,$profile_picture, $id);
     if ($stmt->execute()) {

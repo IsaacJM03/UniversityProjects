@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "./db.php"; // Ensure the correct path to your database connection file
+include "./db.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"]);
@@ -8,15 +8,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST["password"];
     $profile_picture = null;
 
-    // Validate email and password
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         die("Invalid email format.");
     }
 
-    // Hash password
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
-    // Handle file upload
     if (!empty($_FILES["profile_picture"]["name"])) {
         $allowed_types = ["image/jpg", "image/jpeg", "image/png"];
         $file_type = $_FILES["profile_picture"]["type"];
@@ -30,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         move_uploaded_file($_FILES["profile_picture"]["tmp_name"], $profile_picture);
     }
 
-    // Insert user into database
     $stmt = $conn->prepare("INSERT INTO users (username, email, password, profile_picture) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("ssss", $username, $email, $hashed_password, $profile_picture);
 

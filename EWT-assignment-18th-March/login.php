@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Remember me functionality
         if (!empty($_POST["remember"])) {
             setcookie("user_email", $email, time() + (86400 * 30), "/");
-            setcookie("user_pass", $password, time() + (86400 * 30), "/");
+            setcookie("user_pass", $password, time() + (86400 * 30), "/"); // 86400 seconds = 1 day
         }
 
         header("Location: dashboard.php");
