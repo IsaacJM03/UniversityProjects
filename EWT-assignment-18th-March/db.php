@@ -23,7 +23,8 @@ if ($conn->connect_error) {
         password VARCHAR(255) NOT NULL,
         profile_picture VARCHAR(255) NOT NULL,
         reset_token VARCHAR(100) DEFAULT NULL,
-        reset_token_expiry DATETIME DEFAULT NULL
+        reset_token_expiry DATETIME DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )");
     $createUserStmt->execute();
     $createUserStmt->close();
