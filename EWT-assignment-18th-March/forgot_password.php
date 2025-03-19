@@ -47,14 +47,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $mail->Body    = 'Click the following link to reset your password: <a href="' . $reset_link . '">' . $reset_link . '</a>';
 
             $mail->send();
-            echo 'A password reset link has been sent to your email.';
+            print('A password reset link has been sent to your email.');
             header("Location: login.php");
             exit;
         } catch (Exception $e) {
-            echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+            die("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
         }
     } else {
-        echo "No account found with that email.";
+        print("No account found with that email.");
     }
 }
 ?>
