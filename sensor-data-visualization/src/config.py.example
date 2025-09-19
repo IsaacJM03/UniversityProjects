@@ -1,0 +1,19 @@
+import os
+
+# MQTT Broker Configuration
+BROKER_URL = ""
+BROKER_PORT = 1883
+USERNAME = ""
+PASSWORD = ""
+DEVICE_ID = ""
+
+# API Configuration
+API_KEY = ""
+APP_ID = ""
+
+# Data Storage Paths
+RAW_DATA_PATH = os.path.join("data", "raw")
+PROCESSED_DATA_PATH = os.path.join("data", "processed")
+
+# Historical Data Fetching Parameters
+HISTORICAL_DATA_LAST = "12h"  # Fetch messages from the last 12 hours

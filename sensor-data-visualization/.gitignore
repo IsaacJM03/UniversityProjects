@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+vendor/
+config.py
+*.log
+.DS_Store
+*.sqlite
