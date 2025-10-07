@@ -184,7 +184,7 @@ def train_models_from_data(csv_path):
 
 if __name__ == "__main__":
     # Train models if run directly
-    csv_path = "../data/processed/sensor_data.csv"
+    csv_path = "./data/processed/sensor_data.csv"
     if os.path.exists(csv_path):
         predictor, results = train_models_from_data(csv_path)
     else:

@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import warnings
+import time
 from datetime import datetime
 warnings.filterwarnings('ignore')
 
@@ -111,18 +112,102 @@ def predict_occupancy(df):
     
     return df, model, accuracy
 
+def setup_auto_refresh():
+    """Setup auto-refresh functionality"""
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🔄 Live Updates")
+    
+    # Initialize session state for auto-refresh settings
+    if 'auto_refresh_enabled' not in st.session_state:
+        st.session_state.auto_refresh_enabled = True
+    if 'refresh_interval' not in st.session_state:
+        st.session_state.refresh_interval = 10
+    
+    # Auto-refresh controls
+    auto_refresh = st.sidebar.checkbox(
+        "Enable Auto-Refresh", 
+        value=st.session_state.auto_refresh_enabled,
+        help="Automatically refresh the dashboard with new data"
+    )
+    
+    refresh_interval = st.sidebar.selectbox(
+        "Refresh Interval", 
+        [5, 10, 15, 30, 60], 
+        index=[5, 10, 15, 30, 60].index(st.session_state.refresh_interval),
+        format_func=lambda x: f"{x} seconds",
+        help="How often to refresh the dashboard"
+    )
+    
+    # Update session state
+    st.session_state.auto_refresh_enabled = auto_refresh
+    st.session_state.refresh_interval = refresh_interval
+    
+    # Manual refresh button
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.button("🔄 Refresh", type="primary", help="Refresh data now"):
+            st.cache_data.clear()
+            st.rerun()
+    
+    with col2:
+        if st.button("🗑️ Clear Cache", help="Clear all cached data"):
+            st.cache_data.clear()
+            st.success("Cache cleared!")
+    
+    # Show auto-refresh status
+    if auto_refresh:
+        st.sidebar.success(f"✅ Auto-refresh: ON ({refresh_interval}s)")
+        
+        # JavaScript-based auto-refresh with better implementation
+        refresh_script = f"""
+        <script>
+            setTimeout(function(){{
+                window.location.reload(true);
+            }}, {refresh_interval * 1000});
+        </script>
+        """
+        st.sidebar.markdown(refresh_script, unsafe_allow_html=True)
+        
+        # Optional: Show countdown (commented out to avoid performance issues)
+        # countdown_placeholder = st.sidebar.empty()
+        # for i in range(refresh_interval, 0, -1):
+        #     countdown_placeholder.write(f"⏱️ Refreshing in: {i}s")
+        #     time.sleep(1)
+        
+    else:
+        st.sidebar.info("❌ Auto-refresh: OFF")
+    
+    return auto_refresh, refresh_interval
+
 def main():
     st.title("🏠 Smart IoT Sensor Dashboard")
     st.markdown("Real-time analytics with machine learning insights")
     
-    # Show last update time
-    last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    st.markdown(f"**Last Updated:** {last_update}")
+    # Setup auto-refresh
+    auto_refresh, refresh_interval = setup_auto_refresh()
     
-    # Add refresh button
-    if st.button("🔄 Refresh Data"):
-        st.cache_data.clear()
-        st.rerun()
+    # Show dashboard status header
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        last_update = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if auto_refresh:
+            st.markdown(f"**📡 Last Updated:** {last_update}")
+            st.markdown(f"🔄 **Auto-refresh:** Enabled ({refresh_interval}s intervals)")
+        else:
+            st.markdown(f"**📡 Last Updated:** {last_update}")
+            st.markdown("⏸️ **Auto-refresh:** Disabled (Manual mode)")
+    
+    with col2:
+        # Live status indicator
+        if auto_refresh:
+            st.markdown("🟢 **LIVE**")
+        else:
+            st.markdown("🔴 **MANUAL**")
+    
+    with col3:
+        # Data source info
+        st.markdown("📊 **Source:** Processed CSV")
     
     # Load data
     with st.spinner("Loading sensor data..."):
@@ -145,17 +230,33 @@ def main():
             st.info("Please ensure data files exist in data/processed/sensor_data.csv")
             return
     
-    # Show data freshness
+    # Show data freshness with improved messaging
     latest_record = df['timestamp'].max()
     time_since_last = pd.Timestamp.now() - latest_record
+    total_seconds = time_since_last.total_seconds()
     
-    if time_since_last.total_seconds() < 300:  # Less than 5 minutes
-        st.success(f"🟢 Data is fresh! Last record: {time_since_last.seconds//60}m ago")
-    elif time_since_last.total_seconds() < 3600:  # Less than 1 hour
-        st.warning(f"🟡 Data is recent. Last record: {time_since_last.seconds//60}m ago")
+    # Create a more detailed freshness indicator
+    if total_seconds < 60:  # Less than 1 minute
+        st.success(f"🟢 **Data is live!** Last sensor reading: {int(total_seconds)}s ago")
+    elif total_seconds < 300:  # Less than 5 minutes
+        minutes_ago = int(total_seconds // 60)
+        st.success(f"🟢 **Data is fresh!** Last sensor reading: {minutes_ago}m ago")
+    elif total_seconds < 1800:  # Less than 30 minutes
+        minutes_ago = int(total_seconds // 60)
+        st.warning(f"🟡 **Data is recent.** Last sensor reading: {minutes_ago}m ago")
+    elif total_seconds < 3600:  # Less than 1 hour
+        minutes_ago = int(total_seconds // 60)
+        st.warning(f"🟡 **Data is aging.** Last sensor reading: {minutes_ago}m ago")
     else:
-        hours_ago = time_since_last.total_seconds() // 3600
-        st.error(f"🔴 Data is stale! Last record: {hours_ago:.0f}h ago")
+        hours_ago = total_seconds // 3600
+        if hours_ago < 24:
+            st.error(f"🔴 **Data is stale!** Last sensor reading: {hours_ago:.0f}h ago")
+        else:
+            days_ago = hours_ago // 24
+            st.error(f"🔴 **Data is very stale!** Last sensor reading: {days_ago:.0f}d ago")
+    
+    # Show collection info
+    st.info(f"📊 **Dataset:** {len(df):,} total records from {df['timestamp'].min().strftime('%Y-%m-%d')} to {df['timestamp'].max().strftime('%Y-%m-%d')}")
     
     # Key metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -213,7 +314,8 @@ def main():
     
     # Temperature and humidity plot
     fig = make_subplots(rows=2, cols=1, 
-                        subplot_titles=['Temperature Over Time', 'Humidity Over Time'],
+                        subplot_titles=['Temperature & Humidity Over Time'],
+                        # , 'Humidity Over Time'],
                         vertical_spacing=0.1)
     
     fig.add_trace(go.Scatter(x=df['timestamp'], y=df['temperature'], 

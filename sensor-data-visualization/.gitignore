@@ -6,3 +6,4 @@ config.py
 *.log
 .DS_Store
 *.sqlite
+*.pkl
