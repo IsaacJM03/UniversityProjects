@@ -3,12 +3,17 @@ import pandas as pd
 import json
 import sys
 import re
+import pytz  # Add this import
 
 BASE = Path(__file__).resolve().parent.parent
 RAW_CSV = BASE / "data" / "raw" / "sensor_data.csv"
 OUT_DIR = BASE / "data" / "processed"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT_CSV = OUT_DIR / "sensor_data.csv"
+
+# Set timezone to EAT (East Africa Time)
+EAT = pytz.timezone('Africa/Nairobi')
+UTC = pytz.timezone('UTC')
 
 if not RAW_CSV.exists():
     print(f"Raw file not found: {RAW_CSV}")
@@ -50,8 +55,32 @@ df = pd.DataFrame(data_rows)
 for c in ["battery_voltage", "humidity", "motion_counts", "temperature"]:
     df[c] = pd.to_numeric(df[c], errors="coerce")
 
-# Parse timestamp
-df["timestamp"] = pd.to_datetime(df["received_at"], errors="coerce")
+# Parse timestamp and convert to EAT
+def process_timestamps(df):
+    """Convert timestamps from UTC to EAT"""
+    df["timestamp"] = pd.to_datetime(df["received_at"], errors="coerce")
+    
+    # Handle timezone conversion
+    if not df["timestamp"].empty:
+        # Check if timestamps are timezone-naive (assume UTC) or timezone-aware
+        if df["timestamp"].dt.tz is None:
+            print("Converting timezone-naive timestamps (assuming UTC) to EAT...")
+            # Assume UTC and convert to EAT
+            df["timestamp"] = df["timestamp"].dt.tz_localize(UTC).dt.tz_convert(EAT)
+        else:
+            print("Converting timezone-aware timestamps to EAT...")
+            # Convert existing timezone to EAT
+            df["timestamp"] = df["timestamp"].dt.tz_convert(EAT)
+        
+        # Remove timezone info for CSV storage (but keep EAT time)
+        df["timestamp"] = df["timestamp"].dt.tz_localize(None)
+        
+        print(f"Timestamps converted to EAT. Sample: {df['timestamp'].iloc[0]}")
+    
+    return df
+
+# Process timestamps
+df = process_timestamps(df)
 df = df.sort_values("timestamp", na_position="last").reset_index(drop=True)
 
 # Extract motion_state from raw payload JSON
@@ -80,14 +109,29 @@ df = df.drop_duplicates(subset=["received_at", "temperature", "humidity"], keep=
 # Filter out rows with null sensor values
 df = df.dropna(subset=["temperature", "humidity"], how="all")
 
+# Add EAT timezone info column for reference
+df["timezone"] = "EAT"
+
 # Select final columns
-out_cols = ["timestamp", "received_at", "temperature", "humidity", "motion_counts", "motion_state", "battery_voltage"]
+out_cols = ["timestamp", "received_at", "temperature", "humidity", "motion_counts", "motion_state", "battery_voltage", "timezone"]
 df_clean = df[out_cols].copy()
 
 # Save processed data
 df_clean.to_csv(OUT_CSV, index=False)
-print(f"Processed {len(df_clean)} records to {OUT_CSV}")
+print(f"✅ Processed {len(df_clean)} records to {OUT_CSV}")
 if len(df_clean) > 0:
-    print(f"Date range: {df_clean['timestamp'].min()} to {df_clean['timestamp'].max()}")
-    print(f"Motion states: {df_clean['motion_state'].value_counts().to_dict()}")
-    print(f"Sample data:\n{df_clean.head()}")
+    print(f"📅 Date range (EAT): {df_clean['timestamp'].min()} to {df_clean['timestamp'].max()}")
+    print(f"🏃 Motion states: {df_clean['motion_state'].value_counts().to_dict()}")
+    print(f"📊 Sample data (EAT times):\n{df_clean.head(3)}")
+    
+    # Show timezone conversion info
+    latest_time = df_clean['timestamp'].max()
+    print(f"🕐 Latest reading: {latest_time} (EAT)")
+    
+    # Calculate data freshness
+    import datetime
+    now_eat = datetime.datetime.now(EAT).replace(tzinfo=None)
+    if pd.notna(latest_time):
+        time_diff = now_eat - latest_time
+        minutes_ago = time_diff.total_seconds() / 60
+        print(f"⏰ Data freshness: {minutes_ago:.1f} minutes ago")

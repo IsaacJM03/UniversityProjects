@@ -76,7 +76,7 @@ python3 scripts/process_raw.py
 
 # Start dashboard
 echo "🌐 Starting dashboard..."
-streamlit run src/dashboard.py --server.port 8501 --server.address localhost > data/logs/dashboard.log 2>&1 &
+streamlit run src/dashboard.py --server.runOnSave true --server.fileWatcherType auto --server.headless false --server.port 8501 --server.address localhost > data/logs/dashboard.log 2>&1 &
 DASHBOARD_PID=$!
 
 # Wait for dashboard to start
