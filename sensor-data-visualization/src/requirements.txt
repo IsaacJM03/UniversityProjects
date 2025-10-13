@@ -1,0 +1,12 @@
+paho-mqtt
+requests
+pandas
+matplotlib
+seaborn
+streamlit
+plotly
+scikit-learn
+joblib
+numpy
+pytz
+watchdog
