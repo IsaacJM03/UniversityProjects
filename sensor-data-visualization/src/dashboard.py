@@ -1,3 +1,5 @@
+# Remove strictly unnecessary emojis from sidebar, titles, metrics, and status indicators
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -8,66 +10,389 @@ from sklearn.ensemble import IsolationForest, RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import warnings
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import os
+import json
+import threading
+import queue
 from pathlib import Path
+import paho.mqtt.client as mqtt
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 warnings.filterwarnings('ignore')
 
 EAT = pytz.timezone('Africa/Nairobi')
 
+# Global variables for background processes
+if 'mqtt_client' not in st.session_state:
+    st.session_state.mqtt_client = None
+if 'data_queue' not in st.session_state:
+    st.session_state.data_queue = queue.Queue()
+if 'collection_active' not in st.session_state:
+    st.session_state.collection_active = False
+if 'collected_data' not in st.session_state:
+    st.session_state.collected_data = []
+
 st.set_page_config(
     page_title="Smart IoT Sensor Dashboard",
-    page_icon="",
+    page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# MQTT Configuration
+def load_mqtt_config():
+    """Load MQTT configuration from secrets or environment"""
+    try:
+        # Try Streamlit secrets first (for cloud deployment)
+        config = {
+            'broker_url': st.secrets["MQTT_BROKER_URL"],
+            'broker_port': int(st.secrets["MQTT_BROKER_PORT"]),
+            'username': st.secrets["MQTT_USERNAME"],
+            'password': st.secrets["MQTT_PASSWORD"],
+            'device_id': st.secrets["MQTT_DEVICE_ID"],
+            'api_key': st.secrets["API_KEY"],
+            'app_id': st.secrets["APP_ID"]
+        }
+        return config
+    except:
+        # Fallback to environment variables or defaults
+        return {
+            'broker_url': os.getenv("MQTT_BROKER_URL", "eu1.cloud.thethings.network"),
+            'broker_port': int(os.getenv("MQTT_BROKER_PORT", 1883)),
+            'username': os.getenv("MQTT_USERNAME", "bd-test-app2@ttn"),
+            'password': os.getenv("MQTT_PASSWORD", "your-password"),
+            'device_id': os.getenv("MQTT_DEVICE_ID", "lht65n-01-temp-humidity-sensor"),
+            'api_key': os.getenv("API_KEY", "your-api-key"),
+            'app_id': os.getenv("APP_ID", "group-h-eve-application")
+        }
+
+class MQTTCollector:
+    """Embedded MQTT collector that runs in background thread"""
+    
+    def __init__(self, config, data_queue):
+        self.config = config
+        self.data_queue = data_queue
+        self.client = None
+        self.running = False
+        self.thread = None
+        
+    def _extract_payload_dict(self, raw_payload_str):
+        """Extract payload from MQTT message"""
+        try:
+            return json.loads(raw_payload_str)
+        except:
+            return {}
+    
+    def _pick_one(self, d, candidates):
+        """Pick first available value from candidates"""
+        for key in candidates:
+            if key in d and d[key] is not None:
+                return d[key]
+        return None
+    
+    def on_connect(self, client, userdata, flags, rc):
+        """Callback for MQTT connection"""
+        if rc == 0:
+            topic = f"v3/{self.config['app_id']}/devices/{self.config['device_id']}/up"
+            client.subscribe(topic)
+            st.session_state.mqtt_status = "Connected"
+        else:
+            st.session_state.mqtt_status = f"Connection failed: {rc}"
+    
+    def on_message(self, client, userdata, msg):
+        """Callback for MQTT message received"""
+        try:
+            payload_dict = self._extract_payload_dict(msg.payload.decode())
+            
+            # Use EAT timezone
+            eat_time = datetime.now(EAT)
+            
+            sensor_data = {
+                "received_at": eat_time.isoformat(),
+                "battery_voltage": self._pick_one(payload_dict, ["field1", "battery", "bat", "battery_voltage"]),
+                "humidity": self._pick_one(payload_dict, ["field3", "humidity", "hum"]),
+                "motion_counts": self._pick_one(payload_dict, ["field4", "motion_counts", "motion"]),
+                "temperature": self._pick_one(payload_dict, ["field5", "temperature", "temp"]),
+                "_raw_payload": json.dumps(payload_dict, ensure_ascii=False)
+            }
+            
+            # Add to queue for processing
+            self.data_queue.put(sensor_data)
+            st.session_state.last_message_time = eat_time
+            
+        except Exception as e:
+            st.session_state.mqtt_error = str(e)
+    
+    def start_collection(self):
+        """Start MQTT collection in background thread"""
+        if self.running:
+            return
+            
+        self.running = True
+        self.thread = threading.Thread(target=self._run_mqtt_loop, daemon=True)
+        self.thread.start()
+    
+    def _run_mqtt_loop(self):
+        """Run MQTT client loop in background"""
+        try:
+            self.client = mqtt.Client()
+            self.client.username_pw_set(self.config['username'], self.config['password'])
+            self.client.on_connect = self.on_connect
+            self.client.on_message = self.on_message
+            
+            self.client.connect(self.config['broker_url'], self.config['broker_port'], 60)
+            
+            while self.running:
+                self.client.loop(timeout=1.0)
+                time.sleep(0.1)
+                
+        except Exception as e:
+            st.session_state.mqtt_error = str(e)
+            self.running = False
+    
+    def stop_collection(self):
+        """Stop MQTT collection"""
+        self.running = False
+        if self.client:
+            self.client.disconnect()
+        if self.thread:
+            self.thread.join(timeout=2)
+
+class DataProcessor:
+    """Process collected data in real-time"""
+    
+    def __init__(self, data_queue):
+        self.data_queue = data_queue
+        self.processed_data = []
+    
+    def process_queue_data(self):
+        """Process all queued sensor data"""
+        new_data = []
+        
+        while not self.data_queue.empty():
+            try:
+                sensor_data = self.data_queue.get_nowait()
+                processed = self.process_single_reading(sensor_data)
+                if processed:
+                    new_data.append(processed)
+                    self.processed_data.append(processed)
+            except queue.Empty:
+                break
+        
+        return new_data
+    
+    def process_single_reading(self, sensor_data):
+        """Process a single sensor reading"""
+        try:
+            # Convert timestamp to EAT
+            timestamp = pd.to_datetime(sensor_data['received_at'])
+            if timestamp.tz is None:
+                timestamp = EAT.localize(timestamp)
+            else:
+                timestamp = timestamp.astimezone(EAT)
+            
+            # Extract motion state from raw payload
+            motion_state = self.get_motion_state(sensor_data.get('_raw_payload', ''))
+            
+            processed = {
+                'timestamp': timestamp.replace(tzinfo=None),  # Remove timezone for CSV
+                'received_at': sensor_data['received_at'],
+                'temperature': pd.to_numeric(sensor_data.get('temperature'), errors='coerce'),
+                'humidity': pd.to_numeric(sensor_data.get('humidity'), errors='coerce'),
+                'motion_counts': pd.to_numeric(sensor_data.get('motion_counts'), errors='coerce'),
+                'motion_state': motion_state,
+                'battery_voltage': pd.to_numeric(sensor_data.get('battery_voltage'), errors='coerce'),
+                'timezone': 'EAT'
+            }
+            
+            return processed
+            
+        except Exception as e:
+            return None
+    
+    def get_motion_state(self, raw_payload):
+        """Extract motion state from raw payload"""
+        try:
+            if not raw_payload:
+                return None
+            
+            payload_dict = json.loads(raw_payload)
+            return payload_dict.get("Exti_pin_level", "No Activity")
+            
+        except:
+            return "No Activity"
+    
+    def get_processed_dataframe(self):
+        """Get processed data as DataFrame"""
+        if not self.processed_data:
+            return pd.DataFrame()
+        
+        df = pd.DataFrame(self.processed_data)
+        
+        # Remove duplicates and clean data
+        df = df.drop_duplicates(subset=['received_at', 'temperature', 'humidity'], keep='first')
+        df = df.dropna(subset=['temperature', 'humidity'], how='all')
+        df = df.sort_values('timestamp').reset_index(drop=True)
+        
+        return df
+
+def initialize_background_services():
+    """Initialize MQTT collector and data processor"""
+    if not st.session_state.collection_active:
+        config = load_mqtt_config()
+        
+        # Initialize collector
+        st.session_state.mqtt_collector = MQTTCollector(config, st.session_state.data_queue)
+        st.session_state.data_processor = DataProcessor(st.session_state.data_queue)
+        
+        # Start collection
+        st.session_state.mqtt_collector.start_collection()
+        st.session_state.collection_active = True
+        st.session_state.mqtt_status = "Connecting..."
+
 def load_and_process_data():
+    """Load data from live collection, files, or create sample data"""
+    
+    # Initialize background services if not already running
+    if not st.session_state.collection_active:
+        initialize_background_services()
+    
+    # Process any new queued data
+    if 'data_processor' in st.session_state:
+        new_data = st.session_state.data_processor.process_queue_data()
+        if new_data:
+            st.session_state.new_data_count = len(new_data)
+    
+    # Try to get live collected data first
+    live_df = None
+    if 'data_processor' in st.session_state:
+        live_df = st.session_state.data_processor.get_processed_dataframe()
+    
+    # Try to load from files as backup
+    file_df = None
     possible_paths = [
         './data/processed/sensor_data.csv',
         'data/processed/sensor_data.csv',
         '../data/processed/sensor_data.csv',
         Path(__file__).parent.parent / 'data' / 'processed' / 'sensor_data.csv'
     ]
-    df = None
-    data_source = "sample"
+    
     for path in possible_paths:
         try:
             if os.path.exists(str(path)):
-                df = pd.read_csv(str(path))
-                data_source = "real"
-                st.sidebar.success("Real sensor data loaded")
+                file_df = pd.read_csv(str(path))
+                file_df['timestamp'] = pd.to_datetime(file_df['timestamp'])
                 break
         except Exception as e:
             continue
-    if df is None or len(df) == 0:
-        st.sidebar.warning("No real data found. Generating sample data for demo.")
+    
+    # Combine live and file data, or use sample data
+    if live_df is not None and len(live_df) > 0:
+        df = live_df
+        if file_df is not None and len(file_df) > 0:
+            # Combine with file data, removing duplicates
+            combined_df = pd.concat([file_df, live_df], ignore_index=True)
+            df = combined_df.drop_duplicates(subset=['received_at'], keep='last')
+        data_source = "live"
+        st.sidebar.success(f"✅ Live data: {len(live_df)} readings")
+    elif file_df is not None and len(file_df) > 0:
+        df = file_df
+        data_source = "file"
+        st.sidebar.info(f"📁 File data: {len(file_df)} readings")
+    else:
         df = create_sample_data()
         data_source = "sample"
-    df['timestamp'] = pd.to_datetime(df['timestamp'])
+        st.sidebar.warning("⚠️ Using sample data for demo")
+    
+    # Add ML features
     df['hour'] = df['timestamp'].dt.hour
     df['day_of_week'] = df['timestamp'].dt.day_name()
     df['is_weekend'] = df['timestamp'].dt.weekday >= 5
+    
     return df
 
+def setup_data_collection_controls():
+    """Add controls for data collection in sidebar"""
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🔄 Data Collection")
+    
+    # Show MQTT status
+    mqtt_status = getattr(st.session_state, 'mqtt_status', 'Not started')
+    if mqtt_status == "Connected":
+        st.sidebar.success(f"📡 MQTT: {mqtt_status}")
+    elif "failed" in mqtt_status.lower():
+        st.sidebar.error(f"📡 MQTT: {mqtt_status}")
+    else:
+        st.sidebar.warning(f"📡 MQTT: {mqtt_status}")
+    
+    # Show last message time
+    if hasattr(st.session_state, 'last_message_time'):
+        last_msg = st.session_state.last_message_time
+        time_diff = datetime.now(EAT) - last_msg
+        minutes_ago = int(time_diff.total_seconds() / 60)
+        st.sidebar.info(f"📨 Last message: {minutes_ago}m ago")
+    
+    # Collection controls
+    col1, col2 = st.sidebar.columns(2)
+    
+    with col1:
+        if st.button("🚀 Start Collection"):
+            if not st.session_state.collection_active:
+                initialize_background_services()
+                st.success("Collection started!")
+            else:
+                st.info("Collection already running")
+    
+    with col2:
+        if st.button("⏹️ Stop Collection"):
+            if st.session_state.collection_active and 'mqtt_collector' in st.session_state:
+                st.session_state.mqtt_collector.stop_collection()
+                st.session_state.collection_active = False
+                st.success("Collection stopped!")
+    
+    # Show queue status
+    queue_size = st.session_state.data_queue.qsize()
+    if queue_size > 0:
+        st.sidebar.info(f"📦 Queue: {queue_size} pending")
+    
+    # Show any errors
+    if hasattr(st.session_state, 'mqtt_error'):
+        st.sidebar.error(f"❌ Error: {st.session_state.mqtt_error}")
+
 def create_sample_data():
+    """Create realistic sample data for demonstration"""
     from datetime import datetime, timedelta
     import numpy as np
+    
+    # Generate 200 sample records over the past week
     base_time = datetime.now() - timedelta(days=7)
+    
     data = []
     for i in range(200):
-        timestamp = base_time + timedelta(minutes=i*50)
+        timestamp = base_time + timedelta(minutes=i*50)  # Every 50 minutes
+        
+        # Generate realistic sensor data with daily patterns
         hour = timestamp.hour
-        temp_base = 22 + 3 * np.sin((hour - 6) * np.pi / 12)
+        
+        # Temperature follows daily cycle
+        temp_base = 22 + 3 * np.sin((hour - 6) * np.pi / 12)  # Peak at 6PM
         temp = temp_base + np.random.normal(0, 1)
+        
+        # Humidity inversely related to temperature
         humidity = 60 - (temp - 22) * 2 + np.random.normal(0, 3)
-        humidity = max(30, min(80, humidity))
+        humidity = max(30, min(80, humidity))  # Keep in realistic range
+        
+        # Activity follows human patterns (higher during day)
         activity_prob = 0.8 if 6 <= hour <= 22 else 0.2
         motion_counts = np.random.randint(11000, 12000) if np.random.random() < activity_prob else np.random.randint(10800, 11100)
         motion_state = "Activity" if np.random.random() < activity_prob else "No Activity"
+        
+        # Battery slowly declining
         battery = 3.2 - (i / 2000) + np.random.normal(0, 0.02)
         battery = max(2.8, battery)
+        
         data.append({
             'timestamp': timestamp,
             'received_at': timestamp.isoformat(),
@@ -78,6 +403,7 @@ def create_sample_data():
             'battery_voltage': round(battery, 3),
             'timezone': 'EAT'
         })
+    
     return pd.DataFrame(data)
 
 def create_ml_features(df):
@@ -313,50 +639,84 @@ def generate_smart_recommendations(df, patterns, comfort_analysis, predictions, 
     return recommendations
 
 def main():
-    st.title("Smart IoT Sensor Dashboard")
-    st.markdown("Real-time analytics with machine learning insights")
+    st.title("🏠 Smart IoT Sensor Dashboard")
+    st.markdown("**Embedded Collection System** - Real-time analytics with machine learning insights")
+    
+    # Add deployment info
     st.sidebar.markdown("---")
-    st.sidebar.subheader("Deployment Info")
-    st.sidebar.info("Version: 1.0.0")
+    st.sidebar.subheader("🚀 System Info")
+    st.sidebar.info("**Version:** 2.0.0 - Embedded")
+    
+    # Check deployment environment
     is_cloud = os.getenv('STREAMLIT_SHARING_MODE', False) or 'streamlit.app' in os.getenv('HOSTNAME', '')
+    
     if is_cloud:
-        st.sidebar.success("Running on Streamlit Cloud")
+        st.sidebar.success("☁️ **Running on Streamlit Cloud**")
     else:
-        st.sidebar.info("Running Locally")
+        st.sidebar.info("💻 **Running Locally**")
+    
+    # Setup collection controls
+    setup_data_collection_controls()
+    
+    # Setup auto-refresh
     auto_refresh, refresh_interval = setup_auto_refresh()
+    
+    # Show system status
     col1, col2, col3 = st.columns([2, 1, 1])
+    
     with col1:
         eat_now = datetime.now(EAT)
         last_update = eat_now.strftime("%Y-%m-%d %H:%M:%S EAT")
-        if auto_refresh:
-            st.markdown(f"Last Updated: {last_update}")
-            st.markdown(f"Auto-refresh: Enabled ({refresh_interval}s intervals)")
+        st.markdown(f"**📡 Last Updated:** {last_update}")
+        
+        # Show collection status
+        if st.session_state.collection_active:
+            st.markdown("🔄 **Collection:** Active (Embedded MQTT)")
         else:
-            st.markdown(f"Last Updated: {last_update}")
-            st.markdown("Auto-refresh: Disabled (Manual mode)")
+            st.markdown("⏸️ **Collection:** Stopped")
+    
     with col2:
-        if auto_refresh:
-            st.markdown("LIVE")
+        if st.session_state.collection_active:
+            st.markdown("🟢 **LIVE**")
         else:
-            st.markdown("MANUAL")
+            st.markdown("🔴 **OFFLINE**")
+    
     with col3:
-        st.markdown("Source: Processed CSV")
+        mqtt_status = getattr(st.session_state, 'mqtt_status', 'Not started')
+        if mqtt_status == "Connected":
+            st.markdown("📡 **MQTT OK**")
+        else:
+            st.markdown("📡 **MQTT ERROR**")
+    
     st.markdown("---")
+    
+    # Load and process data
     with st.spinner("Loading sensor data..."):
         try:
             df = load_and_process_data()
+            
             if len(df) == 0:
-                st.error("No data found. Please ensure data collection is running.")
-                st.info("Make sure you have data in data/processed/sensor_data.csv")
+                st.error("No data available. Starting data collection...")
+                if not st.session_state.collection_active:
+                    initialize_background_services()
                 return
+            
+            # Apply ML processing
             df = create_ml_features(df)
             df = detect_anomalies(df)
             df, occupancy_model, ml_accuracy = predict_occupancy(df)
-            st.success(f"Loaded {len(df):,} records successfully!")
+            
+            st.success(f"✅ Loaded {len(df):,} records successfully!")
+            
+            # Show new data indicator
+            if hasattr(st.session_state, 'new_data_count') and st.session_state.new_data_count > 0:
+                st.info(f"📈 {st.session_state.new_data_count} new readings processed this refresh")
+                st.session_state.new_data_count = 0
+            
         except Exception as e:
-            st.error(f"Error loading data: {str(e)}")
-            st.info("Please ensure data files exist in data/processed/sensor_data.csv")
+            st.error(f"Error processing data: {str(e)}")
             return
+    
     latest_record = df['timestamp'].max()
     eat_now_naive = datetime.now(EAT).replace(tzinfo=None)
     time_since_last = eat_now_naive - latest_record
