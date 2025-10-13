@@ -7,3 +7,40 @@ config.py
 .DS_Store
 *.sqlite
 *.pkl
+# Create .gitignore to protect sensitive data
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Data files (optional - you might want to include sample data)
+data/raw/*.csv
+data/processed/*.csv
+!data/processed/sample_sensor_data.csv  # Keep sample data
+
+# Logs
+data/logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credentials
+config_local.py
+.env
+*.pyc

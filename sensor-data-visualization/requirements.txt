@@ -7,3 +7,6 @@ streamlit
 plotly
 scikit-learn
 joblib
+numpy
+pytz
+watchdog
