@@ -640,20 +640,20 @@ def generate_smart_recommendations(df, patterns, comfort_analysis, predictions, 
 
 def main():
     st.title("🏠 Smart IoT Sensor Dashboard")
-    st.markdown("**Embedded Collection System** - Real-time analytics with machine learning insights")
+    st.markdown("Real-time analytics with machine learning insights")
     
-    # Add deployment info
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🚀 System Info")
-    st.sidebar.info("**Version:** 2.0.0 - Embedded")
+    # # Add deployment info
+    # st.sidebar.markdown("---")
+    # st.sidebar.subheader("System Info")
+    # st.sidebar.info("**Version:** 2.0.0 - Embedded")
     
     # Check deployment environment
     is_cloud = os.getenv('STREAMLIT_SHARING_MODE', False) or 'streamlit.app' in os.getenv('HOSTNAME', '')
     
     if is_cloud:
-        st.sidebar.success("☁️ **Running on Streamlit Cloud**")
+        st.sidebar.success("Running on Streamlit Cloud")
     else:
-        st.sidebar.info("💻 **Running Locally**")
+        st.sidebar.info("Running Locally")
     
     # Setup collection controls
     setup_data_collection_controls()
@@ -667,26 +667,26 @@ def main():
     with col1:
         eat_now = datetime.now(EAT)
         last_update = eat_now.strftime("%Y-%m-%d %H:%M:%S EAT")
-        st.markdown(f"**📡 Last Updated:** {last_update}")
+        st.markdown(f"**Last Updated:** {last_update}")
         
         # Show collection status
         if st.session_state.collection_active:
-            st.markdown("🔄 **Collection:** Active (Embedded MQTT)")
+            st.markdown("Collection: Active (Embedded MQTT)")
         else:
-            st.markdown("⏸️ **Collection:** Stopped")
+            st.markdown("Collection: Stopped")
     
     with col2:
         if st.session_state.collection_active:
-            st.markdown("🟢 **LIVE**")
+            st.markdown("LIVE")
         else:
-            st.markdown("🔴 **OFFLINE**")
+            st.markdown("OFFLINE")
     
     with col3:
         mqtt_status = getattr(st.session_state, 'mqtt_status', 'Not started')
         if mqtt_status == "Connected":
-            st.markdown("📡 **MQTT OK**")
+            st.markdown("MQTT OK")
         else:
-            st.markdown("📡 **MQTT ERROR**")
+            st.markdown("MQTT ERROR")
     
     st.markdown("---")
     
@@ -706,11 +706,11 @@ def main():
             df = detect_anomalies(df)
             df, occupancy_model, ml_accuracy = predict_occupancy(df)
             
-            st.success(f"✅ Loaded {len(df):,} records successfully!")
+            st.success(f"Loaded {len(df):,} records successfully!")
             
             # Show new data indicator
             if hasattr(st.session_state, 'new_data_count') and st.session_state.new_data_count > 0:
-                st.info(f"📈 {st.session_state.new_data_count} new readings processed this refresh")
+                st.info(f"{st.session_state.new_data_count} new readings processed this refresh")
                 st.session_state.new_data_count = 0
             
         except Exception as e:
@@ -1053,6 +1053,3 @@ def main():
     st.subheader("Recent Data")
     st.dataframe(df.tail(10), use_container_width=True)
     st.markdown("<br><br>", unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
