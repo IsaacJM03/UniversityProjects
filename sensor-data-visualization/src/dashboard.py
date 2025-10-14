@@ -660,6 +660,9 @@ def main():
     
     # Setup auto-refresh
     # auto_refresh, refresh_interval = setup_auto_refresh()
+    if st.button("Refresh", type="primary", help="Refresh data now"):
+            st.cache_data.clear()
+            st.rerun()
     
     # Show system status
     col1, col2, col3 = st.columns([2, 1, 1])
