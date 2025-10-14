@@ -300,7 +300,7 @@ def load_and_process_data():
     elif file_df is not None and len(file_df) > 0:
         df = file_df
         data_source = "file"
-        st.sidebar.info(f"📁 File data: {len(file_df)} readings")
+        st.sidebar.info(f"File data: {len(file_df)} readings")
     else:
         df = create_sample_data()
         data_source = "sample"
@@ -338,7 +338,7 @@ def setup_data_collection_controls():
     col1, col2 = st.sidebar.columns(2)
     
     with col1:
-        if st.button("🚀 Start Collection"):
+        if st.button("Start Collection"):
             if not st.session_state.collection_active:
                 initialize_background_services()
                 st.success("Collection started!")
@@ -346,7 +346,7 @@ def setup_data_collection_controls():
                 st.info("Collection already running")
     
     with col2:
-        if st.button("⏹️ Stop Collection"):
+        if st.button("Stop Collection"):
             if st.session_state.collection_active and 'mqtt_collector' in st.session_state:
                 st.session_state.mqtt_collector.stop_collection()
                 st.session_state.collection_active = False
@@ -650,10 +650,10 @@ def main():
     # Check deployment environment
     is_cloud = os.getenv('STREAMLIT_SHARING_MODE', False) or 'streamlit.app' in os.getenv('HOSTNAME', '')
     
-    if is_cloud:
-        st.sidebar.success("Running on Streamlit Cloud")
-    else:
-        st.sidebar.info("Running Locally")
+    # if is_cloud:
+    #     st.sidebar.success("Running on Streamlit Cloud")
+    # else:
+    #     st.sidebar.info("Running Locally")
     
     # Setup collection controls
     setup_data_collection_controls()
