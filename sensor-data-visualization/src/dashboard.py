@@ -316,7 +316,7 @@ def load_and_process_data():
 def setup_data_collection_controls():
     """Add controls for data collection in sidebar"""
     st.sidebar.markdown("---")
-    st.sidebar.subheader("🔄 Data Collection")
+    st.sidebar.subheader("Data Collection")
     
     # Show MQTT status
     mqtt_status = getattr(st.session_state, 'mqtt_status', 'Not started')
