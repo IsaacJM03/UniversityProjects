@@ -455,24 +455,24 @@ def predict_occupancy(df):
 def setup_auto_refresh():
     st.sidebar.markdown("---")
     st.sidebar.subheader("Live Updates")
-    if 'auto_refresh_enabled' not in st.session_state:
-        st.session_state.auto_refresh_enabled = True
-    if 'refresh_interval' not in st.session_state:
-        st.session_state.refresh_interval = 10
-    auto_refresh = st.sidebar.checkbox(
-        "Enable Auto-Refresh", 
-        value=st.session_state.auto_refresh_enabled,
-        help="Automatically refresh the dashboard with new data"
-    )
-    refresh_interval = st.sidebar.selectbox(
-        "Refresh Interval", 
-        [5, 10, 15, 30, 60], 
-        index=[5, 10, 15, 30, 60].index(st.session_state.refresh_interval),
-        format_func=lambda x: f"{x} seconds",
-        help="How often to refresh the dashboard"
-    )
-    st.session_state.auto_refresh_enabled = auto_refresh
-    st.session_state.refresh_interval = refresh_interval
+    # if 'auto_refresh_enabled' not in st.session_state:
+    #     st.session_state.auto_refresh_enabled = True
+    # if 'refresh_interval' not in st.session_state:
+    #     st.session_state.refresh_interval = 10
+    # auto_refresh = st.sidebar.checkbox(
+    #     "Enable Auto-Refresh", 
+    #     value=st.session_state.auto_refresh_enabled,
+    #     help="Automatically refresh the dashboard with new data"
+    # )
+    # refresh_interval = st.sidebar.selectbox(
+    #     "Refresh Interval", 
+    #     [5, 10, 15, 30, 60], 
+    #     index=[5, 10, 15, 30, 60].index(st.session_state.refresh_interval),
+    #     format_func=lambda x: f"{x} seconds",
+    #     help="How often to refresh the dashboard"
+    # )
+    # st.session_state.auto_refresh_enabled = auto_refresh
+    # st.session_state.refresh_interval = refresh_interval
     col1, col2 = st.sidebar.columns(2)
     with col1:
         if st.button("Refresh", type="primary", help="Refresh data now"):
@@ -482,19 +482,19 @@ def setup_auto_refresh():
         if st.button("Clear Cache", help="Clear all cached data"):
             st.cache_data.clear()
             st.success("Cache cleared!")
-    if auto_refresh:
-        st.sidebar.success(f"Auto-refresh: ON ({refresh_interval}s)")
-        refresh_script = f"""
-        <script>
-            setTimeout(function(){{
-                window.location.reload(true);
-            }}, {refresh_interval * 1000});
-        </script>
-        """
-        st.sidebar.markdown(refresh_script, unsafe_allow_html=True)
-    else:
-        st.sidebar.info("Auto-refresh: OFF")
-    return auto_refresh, refresh_interval
+    # if auto_refresh:
+    #     st.sidebar.success(f"Auto-refresh: ON ({refresh_interval}s)")
+    #     refresh_script = f"""
+    #     <script>
+    #         setTimeout(function(){{
+    #             window.location.reload(true);
+    #         }}, {refresh_interval * 1000});
+    #     </script>
+    #     """
+    #     st.sidebar.markdown(refresh_script, unsafe_allow_html=True)
+    # else:
+    #     st.sidebar.info("Auto-refresh: OFF")
+    # return auto_refresh, refresh_interval
 
 def analyze_occupancy_patterns(df):
     patterns = {}
