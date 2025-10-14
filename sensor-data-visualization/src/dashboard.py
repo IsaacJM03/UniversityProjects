@@ -1053,3 +1053,6 @@ def main():
     st.subheader("Recent Data")
     st.dataframe(df.tail(10), use_container_width=True)
     st.markdown("<br><br>", unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
