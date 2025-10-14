@@ -670,16 +670,16 @@ def main():
         st.markdown(f"**Last Updated:** {last_update}")
         
         # Show collection status
-        if st.session_state.collection_active:
-            st.markdown("Collection: Active (Embedded MQTT)")
-        else:
-            st.markdown("Collection: Stopped")
+        # if st.session_state.collection_active:
+        #     st.markdown("Collection: Active (Embedded MQTT)")
+        # else:
+        #     st.markdown("Collection: Stopped")
     
-    with col2:
-        if st.session_state.collection_active:
-            st.markdown("LIVE")
-        else:
-            st.markdown("OFFLINE")
+    # with col2:
+    #     if st.session_state.collection_active:
+    #         st.markdown("LIVE")
+    #     else:
+    #         st.markdown("OFFLINE")
     
     with col3:
         mqtt_status = getattr(st.session_state, 'mqtt_status', 'Not started')
