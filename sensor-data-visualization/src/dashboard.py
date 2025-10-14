@@ -321,11 +321,11 @@ def setup_data_collection_controls():
     # Show MQTT status
     mqtt_status = getattr(st.session_state, 'mqtt_status', 'Not started')
     if mqtt_status == "Connected":
-        st.sidebar.success(f"📡 MQTT: {mqtt_status}")
+        st.sidebar.success(f" MQTT: {mqtt_status}")
     elif "failed" in mqtt_status.lower():
-        st.sidebar.error(f"📡 MQTT: {mqtt_status}")
+        st.sidebar.error(f"MQTT: {mqtt_status}")
     else:
-        st.sidebar.warning(f"📡 MQTT: {mqtt_status}")
+        st.sidebar.warning(f"MQTT: {mqtt_status}")
     
     # Show last message time
     if hasattr(st.session_state, 'last_message_time'):
